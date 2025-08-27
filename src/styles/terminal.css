@@ -1,0 +1,13 @@
+#terminal-container {
+  font-family: 'Fira Code', monospace;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+#terminal {
+  background-color: #121212;
+  height: calc(100vh - 8rem);
+}
+.prompt { color: #569cd6; }
+.output { color: #ce9178; white-space: pre; }
+.error { color: #f44747; }
+.welcome { color: #4ec9b0; white-space: pre-wrap; padding-bottom: 1rem; }
