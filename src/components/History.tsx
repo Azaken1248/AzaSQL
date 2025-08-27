@@ -80,7 +80,6 @@ export const History: React.FC<HistoryProps> = ({ history }) => {
                   if (line.trim().match(/\d+\s+row\(s\)\s+selected\./)) {
                     footer = line.trim();
                   } else if (line.trim()) {
-                    // Ensure the line is not just whitespace
                     dataRows.push(parseLineByBoundaries(line, boundaries));
                   }
                 }

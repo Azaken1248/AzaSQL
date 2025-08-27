@@ -18,7 +18,6 @@ const auth = getAuth(app);
 const firestore = getFirestore(app);
 
 function uint8ArrayToBase64(bytes: Uint8Array): string {
-  // ... (implementation is the same)
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);

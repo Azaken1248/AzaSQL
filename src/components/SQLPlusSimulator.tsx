@@ -58,7 +58,7 @@ const SQLPlusSimulator: React.FC = () => {
   const [status, setStatus] = useState("Initializing...");
   const [isInputDisabled, setIsInputDisabled] = useState(true);
   const [commandBuffer, setCommandBuffer] = useState<string[]>([]);
-  const [settings, setSettings] = useState({ linesize: 80 });
+  const [settings, setSettings] = useState({ linesize: 1000 });
   const [tables, setTables] = useState<string[]>([]);
   const [prefilledCommand, setPrefilledCommand] = useState("");
   const [activeTab, setActiveTab] = useState<ActiveTab>("terminal");
@@ -74,23 +74,18 @@ const SQLPlusSimulator: React.FC = () => {
     { name: "History", key: "history", icon: faHistory },
   ];
 
-  // Memoized status display with icon and color logic
   const statusDisplay = useMemo(() => {
     const lowerStatus = status.toLowerCase();
 
-    // Default: In-progress state
     let icon = faSpinner;
     let colorClass = "text-yellow-400";
     let spin = true;
 
-    // Rule 1: Error states
     if (lowerStatus.includes("fail") || lowerStatus.includes("error")) {
       icon = faExclamationCircle;
       colorClass = "text-red-400";
       spin = false;
-    }
-    // Rule 2: Success states (must not be an in-progress message ending with '...')
-    else if (
+    } else if (
       !lowerStatus.endsWith("...") &&
       (lowerStatus.includes("ready") ||
         lowerStatus.includes("saved") ||
