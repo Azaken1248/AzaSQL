@@ -1,6 +1,6 @@
 import React from "react";
+import Prism from "prismjs";
 import { type HistoryItem } from "../types";
-import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-sql";
 import "../styles/prism-okaidia.css";
 
@@ -35,7 +35,11 @@ export const History: React.FC<HistoryProps> = ({ history }) => {
                   <pre className="!bg-transparent !p-0 m-0 w-full">
                     <code
                       dangerouslySetInnerHTML={{
-                        __html: highlight(item.text, languages.sql, "sql"),
+                        __html: Prism.highlight(
+                          item.text,
+                          Prism.languages.sql,
+                          "sql"
+                        ),
                       }}
                     />
                   </pre>

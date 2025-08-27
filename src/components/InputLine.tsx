@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Editor from "react-simple-code-editor";
-import { highlight, languages } from "prismjs/components/prism-core";
+import Prism from "prismjs";
 import "prismjs/components/prism-sql";
 import "../styles/prism-okaidia.css";
 
@@ -64,7 +64,7 @@ export const InputLine: React.FC<InputLineProps> = ({
       <Editor
         value={value}
         onValueChange={(code) => setValue(code)}
-        highlight={(code) => highlight(code, languages.sql, "sql")}
+        highlight={(code) => Prism.highlight(code, Prism.languages.sql, "sql")}
         padding={10}
         disabled={isDisabled}
         autoFocus
