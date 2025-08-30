@@ -125,5 +125,24 @@ const getTableInfo = useCallback((tableName: string): ColumnInfo[] => {
   }
 }, [db]);
 
-  return { db, error, isReady, loadDb, executeSql, exportDb, getTables, getTableInfo };
+const getSchema = useCallback(() => {
+  if (!db) return {};
+  const schema: Record<string, string[]> = {};
+  try {
+    const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table';");
+    if (tables.length > 0 && tables[0].values) {
+      tables[0].values.forEach((tableName: any) => {
+        const columnsResult = db.exec(`PRAGMA table_info(${tableName[0]});`);
+        if (columnsResult.length > 0 && columnsResult[0].values) {
+          schema[tableName[0]] = columnsResult[0].values.map((row: any) => row[1]);
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error getting schema:", error);
+  }
+  return schema;
+}, [db]);
+
+  return { db, error, isReady, loadDb, executeSql, exportDb, getTables, getTableInfo, getSchema };
 };

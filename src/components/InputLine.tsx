@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Editor from "react-simple-code-editor";
 import Prism from "prismjs";
 import "prismjs/components/prism-sql";
-import "../styles/prism-okaidia.css";
 
 interface InputLineProps {
   isDisabled: boolean;
@@ -10,6 +9,10 @@ interface InputLineProps {
   commandHistory: string[];
   continuationLine: number;
   prefilledCommand: string;
+  code: string;
+  suggestion: string;
+  onCodeChange: (newCode: string) => void;
+  setSuggestion: (suggestion: string) => void;
 }
 
 export const InputLine: React.FC<InputLineProps> = ({
@@ -18,9 +21,13 @@ export const InputLine: React.FC<InputLineProps> = ({
   commandHistory,
   continuationLine,
   prefilledCommand,
+  code,
+  suggestion,
+  onCodeChange,
+  setSuggestion,
 }) => {
-  const [value, setValue] = useState("");
   const [historyIndex, setHistoryIndex] = useState(commandHistory.length);
+  const editorRef = React.useRef<any>(null);
 
   useEffect(() => {
     setHistoryIndex(commandHistory.length);
@@ -28,29 +35,44 @@ export const InputLine: React.FC<InputLineProps> = ({
 
   useEffect(() => {
     if (prefilledCommand) {
-      setValue(prefilledCommand);
+      onCodeChange(prefilledCommand);
+      setTimeout(() => editorRef.current?._input?.focus(), 50);
     }
   }, [prefilledCommand]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const cursorPosition = editorRef.current?._input?.selectionStart;
+    const isCursorAtEnd = cursorPosition === code.length;
+
+    if (e.key === "ArrowRight" && suggestion && isCursorAtEnd) {
+      e.preventDefault();
+      const words = code.trim().split(" ");
+      words[words.length - 1] = suggestion;
+      const newCode = words.join(" ") + " ";
+      onCodeChange(newCode);
+      setSuggestion("");
+      return;
+    }
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      onSubmit(value);
-      setValue("");
+      if (code.trim()) {
+        onSubmit(code);
+      }
     } else if (e.key === "ArrowUp") {
-      if (value.split("\n").length <= 1) {
+      if (code.split("\n").length <= 1) {
         e.preventDefault();
         const newIndex = Math.max(0, historyIndex - 1);
-        if (commandHistory[newIndex]) {
-          setValue(commandHistory[newIndex]);
+        if (commandHistory[newIndex] !== undefined) {
+          onCodeChange(commandHistory[newIndex]);
           setHistoryIndex(newIndex);
         }
       }
     } else if (e.key === "ArrowDown") {
-      if (value.split("\n").length <= 1) {
+      if (code.split("\n").length <= 1) {
         e.preventDefault();
         const newIndex = Math.min(commandHistory.length, historyIndex + 1);
-        setValue(commandHistory[newIndex] || "");
+        onCodeChange(commandHistory[newIndex] || "");
         setHistoryIndex(newIndex);
       }
     }
@@ -58,22 +80,46 @@ export const InputLine: React.FC<InputLineProps> = ({
 
   const prompt = continuationLine > 1 ? `${continuationLine}> ` : "SQL> ";
 
+  const words = code.split(" ");
+  const lastWord = words[words.length - 1] || "";
+  const ghostText =
+    suggestion && suggestion.toLowerCase().startsWith(lastWord.toLowerCase())
+      ? suggestion.slice(lastWord.length)
+      : "";
+
+  const fullTextWithGhost = code + ghostText;
+
   return (
-    <div className="flex" onKeyDown={handleKeyDown}>
+    <div className="flex items-start">
       <span className="prompt pt-2.5">{prompt}</span>
-      <Editor
-        value={value}
-        onValueChange={(code) => setValue(code)}
-        highlight={(code) => Prism.highlight(code, Prism.languages.sql, "sql")}
-        padding={10}
-        disabled={isDisabled}
-        autoFocus
-        className="flex-grow bg-transparent text-terminal-text font-mono focus:outline-none"
-        style={{
-          minHeight: "2.5em",
-          fontSize: "1em",
-        }}
-      />
+      <div className="editor-wrapper">
+        <Editor
+          ref={editorRef}
+          value={code}
+          onValueChange={onCodeChange}
+          highlight={(code) =>
+            Prism.highlight(code, Prism.languages.sql, "sql")
+          }
+          padding={10}
+          disabled={isDisabled}
+          autoFocus
+          onKeyDown={handleKeyDown}
+          className="editor"
+        />
+        {ghostText && !isDisabled && (
+          <pre
+            className="ghost-text"
+            aria-hidden="true"
+            dangerouslySetInnerHTML={{
+              __html: Prism.highlight(
+                fullTextWithGhost,
+                Prism.languages.sql,
+                "sql"
+              ),
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 };

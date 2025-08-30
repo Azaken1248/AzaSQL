@@ -12,6 +12,10 @@ interface TerminalProps {
   commandHistory: string[];
   continuationLine: number;
   prefilledCommand: string;
+  code: string;
+  suggestion: string;
+  onCodeChange: (newCode: string) => void;
+  setSuggestion: (suggestion: string) => void;
 }
 
 export const Terminal: React.FC<TerminalProps> = ({
@@ -22,6 +26,10 @@ export const Terminal: React.FC<TerminalProps> = ({
   commandHistory,
   continuationLine,
   prefilledCommand,
+  code,
+  suggestion,
+  onCodeChange,
+  setSuggestion,
 }) => {
   const terminalRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +53,10 @@ export const Terminal: React.FC<TerminalProps> = ({
           commandHistory={commandHistory}
           continuationLine={continuationLine}
           prefilledCommand={prefilledCommand}
+          code={code}
+          suggestion={suggestion}
+          onCodeChange={onCodeChange}
+          setSuggestion={setSuggestion}
         />
       </div>
       <div className="text-xs text-gray-400 text-right p-1">{status}</div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Terminal } from "./Terminal";
 import { useSqlEngine } from "../hooks/useSqlEngine";
+import { useAutocomplete } from "../hooks/useAutocomplete";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDatabase,
@@ -25,6 +26,7 @@ import { HistoryPanel } from "./HistoryPanel";
 import "../styles/terminal.css";
 import "../styles/scrollbar.css";
 import "../styles/prism-okaidia.css";
+import "../styles/editor.css";
 
 const WELCOME_MESSAGE: HistoryItem = {
   type: "welcome",
@@ -63,8 +65,19 @@ const SQLPlusSimulator: React.FC = () => {
   const [prefilledCommand, setPrefilledCommand] = useState("");
   const [activeTab, setActiveTab] = useState<ActiveTab>("terminal");
 
-  const { isReady, loadDb, executeSql, exportDb, getTables, getTableInfo } =
-    useSqlEngine();
+  const {
+    isReady,
+    loadDb,
+    executeSql,
+    exportDb,
+    getTables,
+    getTableInfo,
+    getSchema,
+  } = useSqlEngine();
+  const [schema, setSchema] = useState({});
+  const { suggestion, getSuggestion, setSuggestion } = useAutocomplete(schema);
+  const [code, setCode] = useState("");
+
   const saveTimeout = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,11 +89,9 @@ const SQLPlusSimulator: React.FC = () => {
 
   const statusDisplay = useMemo(() => {
     const lowerStatus = status.toLowerCase();
-
     let icon = faSpinner;
     let colorClass = "text-yellow-400";
     let spin = true;
-
     if (lowerStatus.includes("fail") || lowerStatus.includes("error")) {
       icon = faExclamationCircle;
       colorClass = "text-red-400";
@@ -99,7 +110,6 @@ const SQLPlusSimulator: React.FC = () => {
       colorClass = "text-green-400";
       spin = false;
     }
-
     return (
       <div className="flex items-center gap-2">
         <FontAwesomeIcon
@@ -115,13 +125,13 @@ const SQLPlusSimulator: React.FC = () => {
   useEffect(() => {
     if (isReady) {
       setTables(getTables());
+      setSchema(getSchema());
     }
-  }, [isReady, getTables, history]);
+  }, [isReady, getTables, getSchema, history]);
 
   useEffect(() => {
     const initApp = async () => {
       if (!isReady) return;
-
       setStatus("Authenticating...");
       const userId = await authenticate();
       if (!userId) {
@@ -129,7 +139,6 @@ const SQLPlusSimulator: React.FC = () => {
         setIsInputDisabled(false);
         return;
       }
-
       setStatus("Loading saved database...");
       const savedDbData = await loadDbFromFirestore();
       if (savedDbData) {
@@ -280,7 +289,7 @@ const SQLPlusSimulator: React.FC = () => {
   };
 
   const handleCommandSubmit = async (command: string) => {
-    setPrefilledCommand("");
+    if (prefilledCommand) setPrefilledCommand("");
     const trimmedCommand = command.trim();
     const promptForHistory =
       commandBuffer.length === 0 ? "SQL>" : `${commandBuffer.length + 1}>`;
@@ -289,10 +298,8 @@ const SQLPlusSimulator: React.FC = () => {
       { type: "command", text: command, prompt: promptForHistory },
     ]);
     if (!trimmedCommand) return;
-
     setCommandHistory((prev) => [...prev, trimmedCommand]);
     const commandLower = trimmedCommand.toLowerCase();
-
     if (commandLower === "clear") {
       setHistory([]);
       setCommandBuffer([]);
@@ -335,12 +342,10 @@ const SQLPlusSimulator: React.FC = () => {
       ]);
       return;
     }
-
     const endsWithSemicolon = trimmedCommand.endsWith(";");
     const commandToBuffer = endsWithSemicolon
       ? trimmedCommand.slice(0, -1)
       : trimmedCommand;
-
     if (commandBuffer.length === 0 && endsWithSemicolon) {
       processAndExecute([commandToBuffer]);
     } else {
@@ -404,7 +409,6 @@ const SQLPlusSimulator: React.FC = () => {
           />
         </div>
       </header>
-
       <div className="mb-2 border-b border-gray-700 md:hidden">
         <nav className="-mb-px flex space-x-6" aria-label="Tabs">
           {tabs.map((tab) => (
@@ -423,7 +427,6 @@ const SQLPlusSimulator: React.FC = () => {
           ))}
         </nav>
       </div>
-
       <div className="flex min-h-0 flex-grow flex-col gap-4 md:flex-row">
         <div
           className={`${
@@ -436,7 +439,6 @@ const SQLPlusSimulator: React.FC = () => {
             getTableInfo={getTableInfo}
           />
         </div>
-
         <main
           className={`${
             activeTab === "terminal" ? "flex" : "hidden"
@@ -446,13 +448,23 @@ const SQLPlusSimulator: React.FC = () => {
             history={history}
             status={statusDisplay}
             isDisabled={isInputDisabled}
-            onCommandSubmit={handleCommandSubmit}
+            onCommandSubmit={(cmd) => {
+              handleCommandSubmit(cmd);
+              setCode("");
+            }}
             commandHistory={commandHistory}
             continuationLine={commandBuffer.length + 1}
             prefilledCommand={prefilledCommand}
+            code={code}
+            suggestion={suggestion}
+            onCodeChange={(newCode) => {
+              setCode(newCode);
+              if (prefilledCommand) setPrefilledCommand("");
+              getSuggestion(newCode);
+            }}
+            setSuggestion={setSuggestion}
           />
         </main>
-
         <div
           className={`${
             activeTab === "history" ? "flex" : "hidden"
