@@ -16,7 +16,6 @@ AzaSQL is a web-based SQL terminal and simulator designed to provide an interact
 * **Terminal**: `xterm` and `xterm-addon-fit`
 * **API Calls**: `axios`
 * **Backend Services**: Firebase
-* **AI**: `@google/generative-ai`
 
 ### Getting Started
 
