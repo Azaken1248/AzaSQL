@@ -1,0 +1,44 @@
+.editor-wrapper {
+  position: relative;
+  flex-grow: 1;
+}
+
+.ghost-text,
+.editor-wrapper .editor textarea {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+
+  padding: 10px !important;
+  margin: 0;
+  border: 0;
+  outline: none;
+  box-sizing: border-box;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: transparent !important; 
+}
+
+.editor-wrapper .editor textarea {
+  z-index: 2;
+  color: inherit; 
+  resize: none;
+}
+
+.ghost-text {
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ghost-text,
+.ghost-text{
+  filter: opacity(0.4);
+}
